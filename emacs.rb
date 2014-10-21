@@ -2,9 +2,9 @@ require 'formula'
 
 class Emacs < Formula
   homepage 'http://www.gnu.org/software/emacs/'
-  url 'http://ftpmirror.gnu.org/emacs/emacs-24.3.tar.gz'
-  mirror 'http://ftp.gnu.org/pub/gnu/emacs/emacs-24.3.tar.gz'
-  sha256 '0098ca3204813d69cd8412045ba33e8701fa2062f4bff56bedafc064979eef41'
+  url 'http://ftp.gnu.org/gnu/emacs/emacs-24.4.tar.gz'
+  mirror ' http://ftpmirror.gnu.org/emacs/emacs-24.4.tar.gz'
+  sha256 'a93c4f1afa5ade65a0c9723975f0a5fdf6641cc4638fdafb3ed9942c23c32cc6'
 
   option "cocoa", "Build a Cocoa version of emacs"
   option "srgb", "Enable sRGB colors in the Cocoa version of emacs"
@@ -46,27 +46,29 @@ class Emacs < Formula
       depends_on "automake" => :build
     end
 
-    # Fix default-directory on Cocoa and Mavericks.
-    # Fixed upstream in r114730 and r114882.
-    patch :p0, :DATA
+    # # Fix default-directory on Cocoa and Mavericks.
+    # # Fixed upstream in r114730 and r114882.
+    # patch :p0, :DATA
 
-    # Make native fullscreen mode optional, mostly from upstream r111679
-    patch do
-      url "https://gist.githubusercontent.com/scotchi/7209145/raw/a571acda1c85e13ed8fe8ab7429dcb6cab52344f/ns-use-native-fullscreen-and-toggle-frame-fullscreen.patch"
-      sha1 "cb4cc4940efa1a43a5d36ec7b989b90834b7442b"
-    end
+    # # Make native fullscreen mode optional, mostly from upstream r111679
+    # patch do
+    #   url "https://gist.githubusercontent.com/scotchi/7209145/raw/a571acda1c85e13ed8fe8ab7429dcb6cab52344f/ns-use-native-fullscreen-and-toggle-frame-fullscreen.patch"
+    #   sha1 "cb4cc4940efa1a43a5d36ec7b989b90834b7442b"
+    # end
 
-    # Fix memory leaks in NS version from upstream r114945
-    patch do
-      url "https://gist.githubusercontent.com/anonymous/8553178/raw/c0ddb67b6e92da35a815d3465c633e036df1a105/emacs.memory.leak.aka.distnoted.patch.diff"
-      sha1 "173ce253e0d8920e0aa7b1464d5635f6902c98e7"
-    end
+    # # Fix memory leaks in NS version from upstream r114945
+    # patch do
+    #   url "https://gist.githubusercontent.com/anonymous/8553178/raw/c0ddb67b6e92da35a815d3465c633e036df1a105/emacs.memory.leak.aka.distnoted.patch.diff"
+    #   sha1 "173ce253e0d8920e0aa7b1464d5635f6902c98e7"
+    # end
 
     # "--japanese" option:
     # to apply a patch from MacEmacsJP for Japanese input methods
     patch :p0 do
-      url "http://sourceforge.jp/projects/macemacsjp/scm/svn/blobs/583/inline_patch/trunk/emacs-inline.patch?export=raw"
-      sha1 "61a6f41f3ddc9ecc3d7f57379b3dc195d7b9b5e2"
+#      url "http://sourceforge.jp/projects/macemacsjp/scm/svn/blobs/583/inline_patch/trunk/emacs-inline.patch?export=raw"
+#      sha1 "61a6f41f3ddc9ecc3d7f57379b3dc195d7b9b5e2"
+      ulr "http://plamo.linet.gr.jp/~matsuki/mac/emacs-24.4-20140417-inline.patch"
+      sha1 "90456a6856c1e3a11ca10a73866ee1aea371aad4"
     end if build.include? "cocoa" and build.include? "japanese"
   end
 
