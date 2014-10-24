@@ -1,13 +1,19 @@
-require 'formula'
+require "formula"
 
 class Emacs < Formula
-  homepage 'http://www.gnu.org/software/emacs/'
-  url 'http://ftp.gnu.org/gnu/emacs/emacs-24.4.tar.gz'
-  mirror ' http://ftpmirror.gnu.org/emacs/emacs-24.4.tar.gz'
-  sha256 'a93c4f1afa5ade65a0c9723975f0a5fdf6641cc4638fdafb3ed9942c23c32cc6'
+  homepage "https://www.gnu.org/software/emacs/"
+  url "http://ftpmirror.gnu.org/emacs/emacs-24.4.tar.xz"
+  mirror "https://ftp.gnu.org/pub/gnu/emacs/emacs-24.4.tar.xz"
+  sha256 "47e391170db4ca0a3c724530c7050655f6d573a711956b4cd84693c194a9d4fd"
+
+  bottle do
+    revision 1
+    sha1 "921a8a802cb99821d8cc6a1a73ad99bafb09dd77" => :yosemite
+    sha1 "9d076a90ed7ce5b70fe89a7400ff95b8d7089132" => :mavericks
+    sha1 "74439e42f3147b814b4fa451524789d388e24ed8" => :mountain_lion
+  end
 
   option "cocoa", "Build a Cocoa version of emacs"
-  option "srgb", "Enable sRGB colors in the Cocoa version of emacs"
   option "with-x", "Include X11 support"
   option "use-git-head", "Use Savannah (faster) git mirror for HEAD builds"
   option "keep-ctags", "Don't remove the ctags executable that emacs provides"
@@ -15,87 +21,38 @@ class Emacs < Formula
 
   head do
     if build.include? "use-git-head"
-      url 'http://git.sv.gnu.org/r/emacs.git'
+      url "http://git.sv.gnu.org/r/emacs.git"
     else
-      url 'bzr://http://bzr.savannah.gnu.org/r/emacs/trunk'
+      url "bzr://http://bzr.savannah.gnu.org/r/emacs/trunk"
     end
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
-    depends_on "glib" => :optional
-
-    # inline patch for HEAD
-    patch :p1 do
-      url "https://raw.githubusercontent.com/suzuki/emacs-inline-patch/master/emacs-inline.patch"
-      sha1 "65e8ef2a0a0b26b368b1588f78619f0c5aca4e99"
-    end
   end
 
-  devel do
-    url 'http://alpha.gnu.org/gnu/emacs/pretest/emacs-24.3.94.tar.xz'
-    sha256 '5751cac3e1604ad100f9847ff8a429c1b0907b26032152c040e89f294e515bc2'
+  patch :p0 do #inline-patch by GO
+    ulr "http://plamo.linet.gr.jp/~matsuki/mac/emacs-24.4-20140417-inline.patch"
+    sha1 "90456a6856c1e3a11ca10a73866ee1aea371aad4"
+  end if build.include? "cocoa" and build.include? "japanese"
 
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "glib" => :optional
-  end
-
-  stable do
-    if build.include? "cocoa"
-      depends_on "autoconf" => :build
-      depends_on "automake" => :build
-    end
-
-    # # Fix default-directory on Cocoa and Mavericks.
-    # # Fixed upstream in r114730 and r114882.
-    # patch :p0, :DATA
-
-    # # Make native fullscreen mode optional, mostly from upstream r111679
-    # patch do
-    #   url "https://gist.githubusercontent.com/scotchi/7209145/raw/a571acda1c85e13ed8fe8ab7429dcb6cab52344f/ns-use-native-fullscreen-and-toggle-frame-fullscreen.patch"
-    #   sha1 "cb4cc4940efa1a43a5d36ec7b989b90834b7442b"
-    # end
-
-    # # Fix memory leaks in NS version from upstream r114945
-    # patch do
-    #   url "https://gist.githubusercontent.com/anonymous/8553178/raw/c0ddb67b6e92da35a815d3465c633e036df1a105/emacs.memory.leak.aka.distnoted.patch.diff"
-    #   sha1 "173ce253e0d8920e0aa7b1464d5635f6902c98e7"
-    # end
-
-    # "--japanese" option:
-    # to apply a patch from MacEmacsJP for Japanese input methods
-    patch :p0 do
-#      url "http://sourceforge.jp/projects/macemacsjp/scm/svn/blobs/583/inline_patch/trunk/emacs-inline.patch?export=raw"
-#      sha1 "61a6f41f3ddc9ecc3d7f57379b3dc195d7b9b5e2"
-      ulr "http://plamo.linet.gr.jp/~matsuki/mac/emacs-24.4-20140417-inline.patch"
-      sha1 "90456a6856c1e3a11ca10a73866ee1aea371aad4"
-    end if build.include? "cocoa" and build.include? "japanese"
-  end
-
-  depends_on 'pkg-config' => :build
+  depends_on "pkg-config" => :build
   depends_on :x11 if build.with? "x"
   depends_on "d-bus" => :optional
-  depends_on 'gnutls' => :optional
+  depends_on "gnutls" => :optional
   depends_on "librsvg" => :optional
   depends_on "imagemagick" => :optional
   depends_on "mailutils" => :optional
+  depends_on "glib" => :optional
 
   fails_with :llvm do
     build 2334
     cause "Duplicate symbol errors while linking."
   end
 
-  # Follow MacPorts and don't install ctags from Emacs. This allows Vim
-  # and Emacs and ctags to play together without violence.
-  def do_not_install_ctags
-    unless build.include? "keep-ctags"
-      (bin/"ctags").unlink
-      (man1/"ctags.1.gz").unlink
-    end
-  end
-
   def install
     # HEAD builds blow up when built in parallel as of April 20 2012
+    # FIXME is this still necessary? It's been more than two years, surely any
+    # race conditions would have made it into release by now.
     ENV.deparallelize unless build.stable?
 
     args = ["--prefix=#{prefix}",
@@ -107,10 +64,10 @@ class Emacs < Formula
     else
       args << "--without-dbus"
     end
-    if build.with? 'gnutls'
-      args << '--with-gnutls'
+    if build.with? "gnutls"
+      args << "--with-gnutls"
     else
-      args << '--without-gnutls'
+      args << "--without-gnutls"
     end
     args << "--with-rsvg" if build.with? "librsvg"
     args << "--with-imagemagick" if build.with? "imagemagick"
@@ -119,22 +76,11 @@ class Emacs < Formula
     system "./autogen.sh" unless build.stable?
 
     if build.include? "cocoa"
-      # Patch for color issues described here:
-      # http://debbugs.gnu.org/cgi/bugreport.cgi?bug=8402
-      if build.include? "srgb" and build.stable?
-        inreplace "src/nsterm.m",
-          "*col = [NSColor colorWithCalibratedRed: r green: g blue: b alpha: 1.0];",
-          "*col = [NSColor colorWithDeviceRed: r green: g blue: b alpha: 1.0];"
-      end
-
       args << "--with-ns" << "--disable-ns-self-contained"
       system "./configure", *args
       system "make"
-      system "make install"
+      system "make", "install"
       prefix.install "nextstep/Emacs.app"
-
-      # Don't cause ctags clash.
-      do_not_install_ctags
 
       # Replace the symlink with one that avoids starting Cocoa.
       (bin/"emacs").unlink # Kill the existing symlink
@@ -147,7 +93,7 @@ class Emacs < Formula
         # These libs are not specified in xft's .pc. See:
         # https://trac.macports.org/browser/trunk/dports/editors/emacs/Portfile#L74
         # https://github.com/Homebrew/homebrew/issues/8156
-        ENV.append 'LDFLAGS', '-lfreetype -lfontconfig'
+        ENV.append "LDFLAGS", "-lfreetype -lfontconfig"
         args << "--with-x"
         args << "--with-gif=no" << "--with-tiff=no" << "--with-jpeg=no"
       else
@@ -156,48 +102,45 @@ class Emacs < Formula
 
       system "./configure", *args
       system "make"
-      system "make install"
+      system "make", "install"
+    end
 
-      # Don't cause ctags clash.
-      do_not_install_ctags
+    # Follow MacPorts and don't install ctags from Emacs. This allows Vim
+    # and Emacs and ctags to play together without violence.
+    unless build.include? "keep-ctags"
+      (bin/"ctags").unlink
+      (man1/"ctags.1.gz").unlink
     end
   end
 
   def caveats
-    s = ""
-    if build.include? "cocoa"
-      s += <<-EOS.undent
-        A command line wrapper for the cocoa app was installed to:
-         #{bin}/emacs
+    if build.include? "cocoa" then <<-EOS.undent
+      A command line wrapper for the cocoa app was installed to:
+        #{bin}/emacs
       EOS
-      if build.include? "srgb" and not build.stable?
-        s << "\nTo enable sRGB, use (setq ns-use-srgb-colorspace t)"
-      end
     end
-    return s
+  end
+
+  def plist; <<-EOS.undent
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>Label</key>
+      <string>#{plist_name}</string>
+      <key>ProgramArguments</key>
+      <array>
+        <string>#{opt_bin}/emacs</string>
+        <string>--daemon</string>
+      </array>
+      <key>RunAtLoad</key>
+      <true/>
+    </dict>
+    </plist>
+    EOS
   end
 
   test do
     assert_equal "4", shell_output("#{bin}/emacs --batch --eval=\"(print (+ 2 2))\"").strip
   end
 end
-
-__END__
---- src/emacs.c.orig	2013-02-06 13:33:36.000000000 +0900
-+++ src/emacs.c	2013-11-02 22:38:45.000000000 +0900
-@@ -1158,10 +1158,13 @@
-   if (!noninteractive)
-     {
- #ifdef NS_IMPL_COCOA
-+      /* Started from GUI? */
-+      /* FIXME: Do the right thing if getenv returns NULL, or if
-+         chdir fails.  */
-+      if (! inhibit_window_system && ! isatty (0))
-+        chdir (getenv ("HOME"));
-       if (skip_args < argc)
-         {
--	  /* FIXME: Do the right thing if getenv returns NULL, or if
--	     chdir fails.  */
-           if (!strncmp (argv[skip_args], "-psn", 4))
-             {
-               skip_args += 1;
