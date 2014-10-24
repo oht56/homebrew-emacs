@@ -30,7 +30,7 @@ class Emacs < Formula
     depends_on "automake" => :build
   end
 
-  patch :p0 do #inline-patch by GO
+  patch :p1 do #inline-patch by GO
     url "http://plamo.linet.gr.jp/~matsuki/mac/emacs-24.4-20140417-inline.patch"
     sha1 "90456a6856c1e3a11ca10a73866ee1aea371aad4"
   end if build.include? "cocoa" and build.include? "japanese"
